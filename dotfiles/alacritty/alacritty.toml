@@ -1,0 +1,17 @@
+[font]
+size = 14.0
+
+[font.normal]
+family = "FiraCode"
+style = "Regular"
+
+[window]
+opacity = 0.2
+
+[window.padding]
+x = 15
+y = 15
+
+[selection]
+save_to_clipboard = true
+
