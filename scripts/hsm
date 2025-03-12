@@ -1,0 +1,116 @@
+#!/bin/bash
+SESSION_FILE="$HOME/.config/hypr/session.json"
+
+save_session() {
+    # Создаем временный файл для хранения информации о клиентах
+    hyprctl clients -j | jq '[.[] | {class: .class, workspace: .workspace.id, pid: .pid}]' > /tmp/hypr_clients.json
+    
+    # Сохраняем текущий рабочий стол
+    CURRENT_WORKSPACE=$(hyprctl activeworkspace -j | jq '.id')
+    
+    # Обрабатываем каждую запись отдельно
+    jq -c '.[]' /tmp/hypr_clients.json | while read -r client; do
+        class=$(echo "$client" | jq -r '.class')
+        workspace=$(echo "$client" | jq -r '.workspace')
+        pid=$(echo "$client" | jq -r '.pid')
+        
+        if [ -n "$pid" ] && [ -e "/proc/$pid" ]; then
+            # Определяем правильную команду для запуска на основе класса приложения
+            case "$class" in
+                "vesktop")
+                    cmd="/usr/bin/vesktop"
+                    ;;
+                "code-oss")
+                    cmd="/usr/bin/code-oss"
+                    ;;
+                "code")
+                    cmd="/usr/bin/code"
+                    ;;
+                "spotify"|"Spotify")
+                    cmd="/usr/bin/spotify"
+                    ;;
+                *)
+                    # Для всех остальных приложений используем путь к исполняемому файлу
+                    if [ -e "/proc/$pid/exe" ]; then
+                        cmd=$(readlink -f "/proc/$pid/exe")
+                    else
+                        # Если не можем определить исполняемый файл, пробуем использовать имя класса
+                        cmd=$(which "$class" 2>/dev/null || echo "$class")
+                    fi
+                    ;;
+            esac
+            
+            echo "{\"class\":\"$class\",\"workspace\":$workspace,\"cmd\":\"$cmd\"}"
+        fi
+    done | jq -s '. + [{"current_workspace": '$CURRENT_WORKSPACE'}]' > "$SESSION_FILE"
+    
+    echo "Сессия сохранена в $SESSION_FILE"
+}
+
+restore_session() {
+    if [ ! -f "$SESSION_FILE" ]; then
+        echo "Файл сессии не найден!"
+        exit 1
+    fi
+    
+    # Получаем исходный рабочий стол, если он был сохранен
+    CURRENT_WORKSPACE=$(jq -r '.[] | select(has("current_workspace")) | .current_workspace' "$SESSION_FILE" 2>/dev/null)
+    
+    # Если исходного рабочего стола нет в файле, используем текущий
+    if [ -z "$CURRENT_WORKSPACE" ] || [ "$CURRENT_WORKSPACE" == "null" ]; then
+        CURRENT_WORKSPACE=$(hyprctl activeworkspace -j | jq '.id')
+    fi
+    
+    # Создаем рабочие пространства заранее
+    workspaces=$(jq -r '.[] | select(has("workspace")) | .workspace' "$SESSION_FILE" | sort -nu)
+    for ws in $workspaces; do
+        hyprctl dispatch workspace "$ws"
+        sleep 0.2
+    done
+    
+    while read -r entry; do
+        # Пропускаем запись о текущем рабочем столе
+        if echo "$entry" | jq -e 'has("current_workspace")' > /dev/null; then
+            continue
+        fi
+        
+        class=$(echo "$entry" | jq -r '.class')
+        workspace=$(echo "$entry" | jq -r '.workspace')
+        cmd=$(echo "$entry" | jq -r '.cmd')
+        
+        if [ -n "$cmd" ]; then
+            echo "Запуск $class на рабочем столе $workspace..."
+            hyprctl dispatch workspace "$workspace"
+            hyprctl dispatch exec "$cmd"
+            
+            # Ждем, пока приложение откроется, проверяя наличие класса в списке клиентов
+            attempt=0
+            max_attempts=30  # Максимум 30 секунд ожидания
+            while [ $attempt -lt $max_attempts ]; do
+                # Проверяем, есть ли окно с таким классом на нужном рабочем столе
+                if hyprctl clients -j | jq -e ".[] | select(.class == \"$class\" and .workspace.id == $workspace)" > /dev/null; then
+                    echo "Приложение $class успешно запущено!"
+                    break
+                fi
+                attempt=$((attempt + 1))
+                sleep 1
+            done
+            
+            if [ $attempt -eq $max_attempts ]; then
+                echo "Превышено время ожидания для $class. Продолжаем..."
+            fi
+        fi
+    done < <(jq -c '.[]' "$SESSION_FILE")
+    
+    # Возвращаемся на исходный рабочий стол
+    echo "Возвращаемся на рабочий стол $CURRENT_WORKSPACE..."
+    hyprctl dispatch workspace "$CURRENT_WORKSPACE"
+    
+    echo "Сессия восстановлена!"
+}
+
+case "$1" in
+    save) save_session ;;
+    restore) restore_session ;;
+    *) echo "Использование: $0 {save|restore}" ;;
+esac
