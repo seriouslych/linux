@@ -13,24 +13,24 @@
     "include": [
         "~/.config/ml4w/settings/waybar-quicklinks.json",
         "~/.config/waybar/modules.json"
-    ],    
+    ],
+    //"output": "HDMI-A-1",    
     "modules-left": [
         "custom/appmenu",
-        "hyprland/window",
-        "custom/spotify"
+        "hyprland/window"
     ],
     "modules-center": [
         "hyprland/workspaces"
     ],
     "modules-right": [
         "mpd",
+        "hyrpland/language",
         "custom/notification",
         "pulseaudio",
-        "hyprland/language", 
-        "network", 
         "battery",
-        "clock", 
+        "network",
         "tray",
+        "clock",
         "custom/exit"
     ]
 }

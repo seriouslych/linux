@@ -1,0 +1,1 @@
+# My EndavourOS dotfiles and scripts for Hyprland

@@ -5,11 +5,39 @@
 	<name>Открыть терминал</name>
 	<submenu></submenu>
 	<unique-id>1731094276785614-1</unique-id>
-	<command>alacritty --working-directory %d</command>
+	<command>kitty -d %f</command>
 	<description>Пример особого действия</description>
 	<range></range>
 	<patterns>*</patterns>
 	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>edit-copy-path</icon>
+	<name>Копировать путь к файлу</name>
+	<submenu></submenu>
+	<unique-id>1745079731897643-1</unique-id>
+	<command>realpath %f | wl-copy</command>
+	<description>Копирование полного пути к файлу</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>visual-studio-code</icon>
+	<name>Открыть в VS Code</name>
+	<submenu></submenu>
+	<unique-id>1748807351535020-1</unique-id>
+	<command>code %f</command>
+	<description>Открывает VS Code в указанном каталоге</description>
+	<range>*</range>
+	<patterns>*</patterns>
 	<directories/>
 </action>
 </actions>
