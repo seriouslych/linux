@@ -1,2 +1,2 @@
-# My EndavourOS dotfiles and scripts for Hyprland
+# My EndeavourOS dotfiles and scripts for Hyprland
 ![image](screenshot.png)
