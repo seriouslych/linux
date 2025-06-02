@@ -1,0 +1,30 @@
+[
+  {
+    "class": "kitty",
+    "workspace": 1,
+    "cmd": "/usr/bin/kitty"
+  },
+  {
+    "class": "org.telegram.desktop",
+    "workspace": 5,
+    "cmd": "/usr/bin/telegram-desktop"
+  },
+  {
+    "class": "Spotify",
+    "workspace": 4,
+    "cmd": "/usr/bin/spotify"
+  },
+  {
+    "class": "chromium",
+    "workspace": 2,
+    "cmd": "/usr/lib/chromium/chromium"
+  },
+  {
+    "class": "kitty",
+    "workspace": 3,
+    "cmd": "/usr/bin/kitty"
+  },
+  {
+    "current_workspace": 3
+  }
+]
